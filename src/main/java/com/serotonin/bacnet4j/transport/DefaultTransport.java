@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.serotonin.bacnet4j.service.acknowledgement.SimpleAckService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -561,7 +562,7 @@ public class DefaultTransport implements Transport, Runnable {
                 ResponseConsumer consumer = ctx.getConsumer();
 
                 if (ack instanceof SimpleACK)
-                    consumer.success(null);
+                    consumer.success(new SimpleAckService());
                 else if (ack instanceof ComplexACK) {
                     ComplexACK cack = ((ComplexACK) ack);
                     if (cack.isSegmentedMessage()) {
