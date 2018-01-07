@@ -151,7 +151,8 @@ public class IpNetwork extends Network implements Runnable {
     @Override
     public void initialize(final Transport transport) throws Exception {
         super.initialize(transport);
-
+        // InetAddrCache中有个static Map<InetAddress, Map<Integer, InetSocketAddress>> socketCache
+        // 根据localBindAddressStr创建InetAddress，一个InetAddress可以根据多个port创建多个InetSocketAddress
         localBindAddress = InetAddrCache.get(localBindAddressStr, port);
 
         if (reuseAddress) {
