@@ -166,8 +166,8 @@ public class IpNetwork extends Network implements Runnable {
         socket.setBroadcast(true);
 
         //        broadcastAddress = new Address(broadcastIp, port, new Network(0xffff, new byte[0]));
-        broadcastMAC = IpNetworkUtils.toOctetString(broadcastAddressStr, port);
-        subnetMask = BACnetUtils.dottedStringToBytes(subnetMaskStr);
+        broadcastMAC = IpNetworkUtils.toOctetString(broadcastAddressStr, port);// broadcastMAC里面有byte[6]，前4个byte是broadcastAddress，后2个byte是port
+        subnetMask = BACnetUtils.dottedStringToBytes(subnetMaskStr);// 将"255.255.255.0"转换成byte[4]
 
         thread = new Thread(this, "BACnet4J IP socket listener");
         thread.start();
