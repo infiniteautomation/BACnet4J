@@ -395,7 +395,7 @@ public class RequestUtils {
 
         return propertyValues;
     }
- 
+
     public static void populateWithError(final RemoteDevice d,
             final Map<ObjectIdentifier, List<PropertyReference>> properties, final ReadListenerUpdater updater,
             final ErrorClassAndCode error) {
