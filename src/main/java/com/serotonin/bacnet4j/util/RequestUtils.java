@@ -360,21 +360,20 @@ public class RequestUtils {
                         throw new BACnetException("Completed " + counter + " requests. Excepted on: " + request, e);
                 } catch (final BACnetTimeoutException e) {
                     if (counter == 0) {
-                        // 如果counter == 0就出现异常说明是设备通讯有问题
+                // 如果counter == 0就出现异常说明是设备通讯有问题
                         throw e;
                     }
-
-					// 如果 counter > 0 说明这个remoteDevice的读取多个属性请求成功过至少一次，
-					// 这时再出现异常说明是remoteDevice的某些对象出问题了。
+		// 如果 counter > 0 说明这个remoteDevice的读取多个属性请求成功过至少一次，
+		// 这时再出现异常说明是remoteDevice的某些对象出问题了。
                     populateWithError(d, properties, updater,
                             new ErrorClassAndCode(ErrorClass.device, ErrorCode.timeout));
                     partitions.remove(0);
                 } catch (final ErrorAPDUException e) {
-					// 出现这个异常可能是因为remoteDevice只支持单个属性请求（官方文档说的）
-					// PropertyReferences partition;
-					// size()表示partition里的所有对象的所有属性的总数
-					// partition.size() < 2 就没必要再继续请求了
-					// 否则使用sendOneAtATime读取单个属性请求去一个个的读取对象的每一个属性（性能极差）
+		// 出现这个异常可能是因为remoteDevice只支持单个属性请求（官方文档说的）
+		// PropertyReferences partition;
+		// size()表示partition里的所有对象的所有属性的总数
+		// partition.size() < 2 就没必要再继续请求了
+		// 否则使用sendOneAtATime读取单个属性请求去一个个的读取对象的每一个属性（性能极差）
                     if (partition.size() < 2)
                         populateWithError(d, properties, updater, e.getError());
                     else {
