@@ -103,12 +103,12 @@ public class IpNetwork extends Network implements Runnable {
      */
     IpNetwork(final int port, final String localBindAddress, final String broadcastAddress, final String subnetMask,
             final int localNetworkNumber, final boolean reuseAddress) {
-        super(localNetworkNumber);
-        this.port = port;
-        this.localBindAddressStr = localBindAddress;
+        super(localNetworkNumber); // 0
+        this.port = port; // 47808
+        this.localBindAddressStr = localBindAddress; // "0.0.0.0"
         this.broadcastAddressStr = broadcastAddress;
         this.subnetMaskStr = subnetMask;
-        this.reuseAddress = reuseAddress;
+        this.reuseAddress = reuseAddress; // false
     }
 
     @Override
