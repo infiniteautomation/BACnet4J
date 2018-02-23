@@ -71,11 +71,11 @@ public class IpNetwork extends Network implements Runnable {
 
     private static final int MESSAGE_LENGTH = 2048;
 
-    private final int port;
-    private final String localBindAddressStr;
+    private final int port; // default == 47808
+    private final String localBindAddressStr; // default == "0.0.0.0"
     private final String broadcastAddressStr;
     private final String subnetMaskStr;
-    private final boolean reuseAddress;
+    private final boolean reuseAddress; // default == false
 
     // BBMD support
     private List<BDTEntry> broadcastDistributionTable = new ArrayList<>();
@@ -92,9 +92,14 @@ public class IpNetwork extends Network implements Runnable {
     // Runtime
     private Thread thread;
     private DatagramSocket socket;
+    
+    // 内部存放着一个byte[], 前4个byte是broadcastAddressStr, 后2个byte是port
     private OctetString broadcastMAC;
+    
+    // localBindAddress是由localBindAddressStr和port创建，用于DatagramSocket绑定本地IP和端口号
     private InetSocketAddress localBindAddress;
-    private byte[] subnetMask;
+    
+    private byte[] subnetMask; // subnetMaskStr的byte值, 长度是4
     private long bytesOut;
     private long bytesIn;
 
@@ -147,16 +152,10 @@ public class IpNetwork extends Network implements Runnable {
     DatagramSocket getSocket() {
         return socket;
     }
-//      this.port = port; // 47808
-//      this.localBindAddressStr = localBindAddress; // "0.0.0.0"
-//      this.broadcastAddressStr = broadcastAddress;
-//      this.subnetMaskStr = subnetMask;
-//      this.reuseAddress = reuseAddress; // false
+    
     @Override
     public void initialize(final Transport transport) throws Exception {
         super.initialize(transport);
-        // InetAddrCache中有个static Map<InetAddress, Map<Integer, InetSocketAddress>> socketCache
-        // 根据localBindAddressStr创建InetAddress，一个InetAddress可以根据多个port创建多个InetSocketAddress
         localBindAddress = InetAddrCache.get(localBindAddressStr, port);
 
         if (reuseAddress) {
@@ -169,10 +168,7 @@ public class IpNetwork extends Network implements Runnable {
             socket = new DatagramSocket(localBindAddress);
         socket.setBroadcast(true);
 
-        // broadcastAddress = new Address(broadcastIp, port, new Network(0xffff, new byte[0]));
-        // broadcastMAC里面有byte[6]，前4个byte是broadcastAddress，后2个byte是port
         broadcastMAC = IpNetworkUtils.toOctetString(broadcastAddressStr, port);
-        // 将"255.255.255.0"转换成byte[4]
         subnetMask = BACnetUtils.dottedStringToBytes(subnetMaskStr);
 
         thread = new Thread(this, "BACnet4J IP socket listener");
