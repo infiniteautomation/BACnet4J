@@ -39,8 +39,10 @@ public class Address extends BaseType {
     public static final int ALL_NETWORKS = 0xFFFF;
     public static final Address GLOBAL = new Address(new Unsigned16(ALL_NETWORKS), null);
 
+    // 父类是UnsignedInteger, Unsigned16的构造函数只做了范围检测, 当networkNumber大于0xFFFF就会抛出IllegalArgumentException
+    // networkNumber在创建IpNetwork的时候可以指定, 不指定默认为0
     private final Unsigned16 networkNumber;
-    private final OctetString macAddress;
+    private final OctetString macAddress; // 内部存放着一个byte[], 通常前4个byte是IP地址, 后2个byte是port
 
     public Address(final byte[] macAddress) {
         this(new Unsigned16(LOCAL_NETWORK), new OctetString(macAddress));
