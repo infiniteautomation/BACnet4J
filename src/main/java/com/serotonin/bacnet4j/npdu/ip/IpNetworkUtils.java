@@ -151,6 +151,9 @@ public class IpNetworkUtils {
     }
 
     public static Address toAddress(final InetSocketAddress addr) {
+        // addr.getAddress().getAddress();
+        // 第一个getAddress是从InetSocketAddress获取InetAddress
+        // 第二个getAddress是返回此IP地址的各个字节，高字节放在低索引处
         return toAddress(Address.LOCAL_NETWORK, addr.getAddress().getAddress(), addr.getPort());
     }
 
