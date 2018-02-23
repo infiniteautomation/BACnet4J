@@ -54,6 +54,8 @@ public class IpNetworkBuilder {
      * @param networkPrefix
      *            the number of bits in the local subnet.
      * @return this
+     * 
+     * 参考withSubnet方法
      */
     public IpNetworkBuilder withBroadcast(final String broadcastAddress, final int networkPrefixLength) {
         this.broadcastAddress = broadcastAddress;
