@@ -28,7 +28,6 @@
  */
 package com.serotonin.bacnet4j.type.constructed;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.serotonin.bacnet4j.exception.BACnetException;
@@ -36,17 +35,15 @@ import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.util.sero.ByteQueue;
 
-public class PriorityArray extends SequenceOf<PriorityValue> {
+public class PriorityArray extends BACnetArray<PriorityValue> {
     private static final int LENGTH = 16;
 
     public PriorityArray() {
-        super(new ArrayList<PriorityValue>());
-        ensureLength();
+        super(LENGTH, new PriorityValue(Null.instance));
     }
 
     public PriorityArray(final List<PriorityValue> priorityValues) {
         super(priorityValues);
-        ensureLength();
     }
 
     public PriorityArray(final ByteQueue queue) throws BACnetException {
@@ -60,10 +57,9 @@ public class PriorityArray extends SequenceOf<PriorityValue> {
     }
 
     private void ensureLength() {
-        while (getCount() < LENGTH)
-            super.add(new PriorityValue(Null.instance));
-        while (getCount() > LENGTH)
-            super.remove(getCount());
+        if (getCount() != LENGTH) {
+            throw new RuntimeException("Invalid priority array length: " + getCount());
+        }
     }
 
     public PriorityArray put(final int indexBase1, final Encodable value) {

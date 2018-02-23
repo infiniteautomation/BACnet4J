@@ -87,8 +87,10 @@ public class PropertyUtils {
         final long timeoutToUse;
         if (deviceTimeout <= 0) {
             timeoutToUse = localDevice.getTransportTimeout();
+            LOG.debug("Using local device timeout for reading properties: {}", timeoutToUse);
         } else {
             timeoutToUse = deviceTimeout;
+            LOG.debug("Using provided parameter as timeout for reading properties: {}", timeoutToUse);
         }
 
         final DeviceObjectPropertyValues result = new DeviceObjectPropertyValues();

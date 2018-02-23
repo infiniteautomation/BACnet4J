@@ -163,16 +163,23 @@ public class RemoteDeviceFinder {
                 if (remoteDevice != null)
                     return remoteDevice;
 
+                LOG.debug("Waiting {} ms for something to happen", timeoutMillis);
                 ThreadUtils.wait(this, timeoutMillis);
+                LOG.debug("Done waiting");
 
-                if (cancelled)
+                if (cancelled) {
+                    LOG.debug("Future was cancelled");
                     throw new CancellationException();
-                if (remoteDevice != null)
+                }
+                if (remoteDevice != null) {
+                    LOG.debug("Remote device was found");
                     return remoteDevice;
+                }
 
                 // done() was not call, so ensure that the listener is removed from the event handler
                 localDevice.getEventHandler().removeListener(listener);
 
+                LOG.debug("Throwing timeout");
                 throw new BACnetTimeoutException("No response from instanceId " + instanceId);
             }
         }

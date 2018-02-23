@@ -45,6 +45,8 @@ import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.type.constructed.BACnetArray;
 import com.serotonin.bacnet4j.type.constructed.Choice;
 import com.serotonin.bacnet4j.type.constructed.ChoiceOptions;
+import com.serotonin.bacnet4j.type.constructed.PriorityArray;
+import com.serotonin.bacnet4j.type.constructed.PriorityValue;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 import com.serotonin.bacnet4j.type.enumerated.ErrorClass;
 import com.serotonin.bacnet4j.type.enumerated.ErrorCode;
@@ -386,23 +388,12 @@ abstract public class Encodable {
             return readSequenceOf(queue, def.getClazz(), contextId);
         }
 
-        //        final int primitiveTypeId = Primitive.getPrimitiveTypeId(queue.peek(getTagLength(queue)));
-        final Encodable result = readWrapped(queue, def.getClazz(), contextId);
-        //        if (primitiveTypeId != -1) {
-        //            // Make sure that the type that was read matches the type that was created.
-        //            if (result instanceof Primitive) {
-        //                final Primitive p = (Primitive) result;
-        //                if (p.getTypeId() != primitiveTypeId) {
-        //                    throw new BACnetErrorException(ErrorClass.property, ErrorCode.invalidDataType);
-        //                }
-        //            } else {
-        //                LOG.warn("Read a type of {} when a primitive of type {} was expected", result.getClass(),
-        //                        primitiveTypeId);
-        //                throw new BACnetErrorException(ErrorClass.property, ErrorCode.invalidDataType);
-        //            }
-        //        }
+        if (propertyArrayIndex != null && def.getClazz() == PriorityArray.class) {
+            // An element of a priority array.
+            return readWrapped(queue, PriorityValue.class, contextId);
+        }
 
-        return result;
+        return readWrapped(queue, def.getClazz(), contextId);
     }
 
     protected static Encodable readOptionalANY(final ByteQueue queue, final ObjectType objectType,

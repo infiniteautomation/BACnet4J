@@ -781,6 +781,7 @@ public class LocalDevice {
                 future = futures.get(instanceNumber);
                 if (future == null) {
                     if (deviceFindTimedOut(instanceNumber)) {
+                        LOG.debug("Device {} is in the timed out list. Not attempting to find again.", instanceNumber);
                         throw new BACnetTimeoutException("No response from instanceId " + instanceNumber);
                     }
 

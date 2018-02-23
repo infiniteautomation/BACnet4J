@@ -61,6 +61,10 @@ public class BACnetArray<E extends Encodable> extends SequenceOf<E> {
         super(that.values);
     }
 
+    public BACnetArray(final ByteQueue queue, final int count, final Class<E> clazz) throws BACnetException {
+        super(queue, count, clazz);
+    }
+
     public BACnetArray(final ByteQueue queue, final Class<E> clazz, final int contextId) throws BACnetException {
         super(queue, clazz, contextId);
     }

@@ -149,9 +149,7 @@ public class PriorityValue extends BaseType {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("PriorityValue(").append(choice).append(")");
-        return sb.toString();
+        return "PriorityValue(" + choice + ")";
     }
 
     @Override

@@ -6,7 +6,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 group = 'com.serotonin'
-version = '4.1.2'
+version = '4.1.4'
 
 repositories {
     jcenter()

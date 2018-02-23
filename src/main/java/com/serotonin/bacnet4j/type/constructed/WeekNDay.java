@@ -28,8 +28,11 @@
  */
 package com.serotonin.bacnet4j.type.constructed;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.serotonin.bacnet4j.enums.DayOfWeek;
 import com.serotonin.bacnet4j.enums.Month;
@@ -50,6 +53,22 @@ public class WeekNDay extends OctetString implements DateMatchable {
         public static final WeekOfMonth last7Days = new WeekOfMonth(6);
         public static final WeekOfMonth any = new WeekOfMonth(255);
 
+        private static final Map<Integer, Enumerated> idMap = new HashMap<>();
+        private static final Map<String, Enumerated> nameMap = new HashMap<>();
+        private static final Map<Integer, String> prettyMap = new HashMap<>();
+
+        static {
+            Enumerated.init(MethodHandles.lookup().lookupClass(), idMap, nameMap, prettyMap);
+        }
+
+        public static WeekOfMonth forName(final String name) {
+            return (WeekOfMonth) Enumerated.forName(nameMap, name);
+        }
+        
+        public static String nameForId(final int id) {
+            return prettyMap.get(id);
+        }
+        
         public static WeekOfMonth valueOf(final byte b) {
             switch (b) {
             case 1:
