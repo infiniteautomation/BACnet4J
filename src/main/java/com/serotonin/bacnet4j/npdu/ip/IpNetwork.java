@@ -147,7 +147,11 @@ public class IpNetwork extends Network implements Runnable {
     DatagramSocket getSocket() {
         return socket;
     }
-
+//      this.port = port; // 47808
+//      this.localBindAddressStr = localBindAddress; // "0.0.0.0"
+//      this.broadcastAddressStr = broadcastAddress;
+//      this.subnetMaskStr = subnetMask;
+//      this.reuseAddress = reuseAddress; // false
     @Override
     public void initialize(final Transport transport) throws Exception {
         super.initialize(transport);
@@ -165,7 +169,7 @@ public class IpNetwork extends Network implements Runnable {
             socket = new DatagramSocket(localBindAddress);
         socket.setBroadcast(true);
 
-        //        broadcastAddress = new Address(broadcastIp, port, new Network(0xffff, new byte[0]));
+        // broadcastAddress = new Address(broadcastIp, port, new Network(0xffff, new byte[0]));
         // broadcastMAC里面有byte[6]，前4个byte是broadcastAddress，后2个byte是port
         broadcastMAC = IpNetworkUtils.toOctetString(broadcastAddressStr, port);
         // 将"255.255.255.0"转换成byte[4]
