@@ -373,7 +373,7 @@ public class RequestUtils {
                 // PropertyReferences partition;
                 // size()表示partition里的所有对象的所有属性的总数
                 // partition.size() < 2 就没必要再继续请求了
-                // 否则使用sendOneAtATime读取单个属性请求去一个个的读取对象的每一个属性（性能极差）
+                // 否则使用sendOneAtATime读取单个属性请求去一个个的读取对象的每一个属性
                     if (partition.size() < 2)
                         populateWithError(d, properties, updater, e.getError());
                     else {
