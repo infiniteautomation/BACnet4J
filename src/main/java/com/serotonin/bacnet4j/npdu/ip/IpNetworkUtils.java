@@ -123,6 +123,7 @@ public class IpNetworkUtils {
     }
 
     public static Address toAddress(final byte[] ipAddress, final int port) {
+        //                            0
         return toAddress(Address.LOCAL_NETWORK, ipAddress, port);
     }
 
@@ -150,6 +151,9 @@ public class IpNetworkUtils {
     }
 
     public static Address toAddress(final InetSocketAddress addr) {
+        // addr.getAddress().getAddress();
+        // 第一个getAddress是从InetSocketAddress获取InetAddress
+        // 第二个getAddress是返回此IP地址的各个字节，高字节放在低索引处
         return toAddress(Address.LOCAL_NETWORK, addr.getAddress().getAddress(), addr.getPort());
     }
 
@@ -177,25 +181,25 @@ public class IpNetworkUtils {
         return (ba[0] & 0xffL) << 24 | (ba[1] & 0xffL) << 16 | (ba[2] & 0xffL) << 8 | ba[3] & 0xffL;
     }
 
-    public static long createMask(final int length) {
-        long l = 0;
+    public static long createMask(final int length // 24) {
+        long l = 0; // long = 8 byte = 64 bit
         int shift = 31;
         for (int i = 0; i < length; i++) {
             l |= 1L << shift--;
         }
-        return l;
+        return l; // 高32位为0，低32位为11111111 11111111 11111111 00000000
     }
 
     public static long toBroadcast(final long ipaddr, final long subnet) {
         return 0xFFFFFFFFL ^ subnet | ipaddr;
     }
 
-    public static String toIpAddrString(final long addr) {
+    public static String toIpAddrString(final long addr // 高32位为0，低32位为11111111 11111111 11111111 00000000) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(addr >> 24 & 0xFF).append('.');
-        sb.append(addr >> 16 & 0xFF).append('.');
-        sb.append(addr >> 8 & 0xFF).append('.');
-        sb.append(addr & 0xFF);
-        return sb.toString();
+        sb.append(addr >> 24 & 0xFF).append('.'); // addr >> 24 = 00000000 00000000 00000000 11111111, & 0xFF = 11111111 = 255
+        sb.append(addr >> 16 & 0xFF).append('.'); // addr >> 16 = 00000000 00000000 11111111 11111111, 最后结果跟上面一样
+        sb.append(addr >> 8 & 0xFF).append('.');  // addr >> 8  = 00000000 11111111 11111111 11111111, 最后结果跟上面一样
+        sb.append(addr & 0xFF); // 11111111 11111111 11111111 00000000 & 00000000 00000000 00000000 11111111 = 0
+        return sb.toString(); // "255.255.255.0"
     }
 }

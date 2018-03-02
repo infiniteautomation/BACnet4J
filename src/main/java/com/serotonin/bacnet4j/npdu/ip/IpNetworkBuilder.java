@@ -54,6 +54,8 @@ public class IpNetworkBuilder {
      * @param networkPrefix
      *            the number of bits in the local subnet.
      * @return this
+     * 
+     * 参考withSubnet方法
      */
     public IpNetworkBuilder withBroadcast(final String broadcastAddress, final int networkPrefixLength) {
         this.broadcastAddress = broadcastAddress;
@@ -72,16 +74,22 @@ public class IpNetworkBuilder {
      * @param networkPrefix
      *            the number of bits in the local subnet.
      * @return this
+     * 
+     * subnetMask的值由networkPrefixLength决定。
+     * networkPrefixLength = 32, subnetMask = "255.255.255.255", subnetAddress不变
+     * networkPrefixLength = 24, subnetMask = "255.255.255.0", subnetAddress的低8位改为255, 比如 192.168.1.* 会被改成"192.168.1.255"
+     * networkPrefixLength = 16, subnetMask = "255.255.0.0", subnetAddress的低16位改为255, 比如 192.168.*.* 会被改成"192.168.255.255"
+     * networkPrefixLength = 8, subnetMask = "255.0.0.0", subnetAddress的低24位改为255, 比如 192.*.*.* 会被改成"192.255.255.255"
      */
+
     public IpNetworkBuilder withSubnet(final String subnetAddress, final int networkPrefixLength) {
         final long subnetMask = IpNetworkUtils.createMask(networkPrefixLength);
         this.subnetMask = toIpAddrString(subnetMask);
 
         final long negMask = ~subnetMask & 0xFFFFFFFFL;
         final long subnet = IpNetworkUtils.bytesToLong(BACnetUtils.dottedStringToBytes(subnetAddress));
-
         this.broadcastAddress = toIpAddrString(subnet | negMask);
-
+        
         return this;
     }
 
