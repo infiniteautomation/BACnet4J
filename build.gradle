@@ -9,7 +9,12 @@ group = 'com.infiniteautomation'
 version = '6.0.0-SNAPSHOT'
 
 repositories {
-    jcenter()
+    jcenter() {
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
 }
 
 dependencies {
