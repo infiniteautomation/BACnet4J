@@ -30,6 +30,7 @@ import com.serotonin.bacnet4j.type.primitive.Real;
 import com.serotonin.bacnet4j.type.primitive.SignedInteger;
 import com.serotonin.bacnet4j.type.primitive.Unsigned32;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import com.serotonin.bacnet4j.type.primitive.encoding.StandardCharacterEncodings;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
 public class BACnetObjectTest extends AbstractTest {
@@ -44,7 +45,8 @@ public class BACnetObjectTest extends AbstractTest {
                         new NameValue("tag2", Null.instance)));
         d2.writePropertyInternal(PropertyIdentifier.forId(6789),
                 new BACnetArray<>(new Real(0), new Real(1), new Real(2)));
-        d2.writePropertyInternal(PropertyIdentifier.protocolVersion, new CharacterString(CharacterString.Encodings.ANSI_X3_4, "hxzy-1.01"));
+        d2.writePropertyInternal(PropertyIdentifier.protocolVersion,
+                new CharacterString(StandardCharacterEncodings.ANSI_X3_4, "hxzy-1.01"));
     }
 
     @Test

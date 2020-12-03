@@ -1,0 +1,6 @@
+com.serotonin.bacnet4j.type.primitive.encoding.AnsiCharacterEncoder
+com.serotonin.bacnet4j.type.primitive.encoding.DbcsCp850CharacterEncoder
+com.serotonin.bacnet4j.type.primitive.encoding.DbcsCp932CharacterEncoder
+com.serotonin.bacnet4j.type.primitive.encoding.Iso8859CharacterEncoder
+com.serotonin.bacnet4j.type.primitive.encoding.Ucs2CharacterEncoder
+com.serotonin.bacnet4j.type.primitive.encoding.Ucs4CharacterEncoder
