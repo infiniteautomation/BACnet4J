@@ -28,60 +28,61 @@
  */
 package com.serotonin.bacnet4j.type.primitive;
 
-import java.io.UnsupportedEncodingException;
+import static com.serotonin.bacnet4j.type.primitive.encoding.StandardCharacterEncodings.ANSI_X3_4;
+import static com.serotonin.bacnet4j.type.primitive.encoding.StandardCharacterEncodings.CODE_PAGE_LATIN_1;
+import static com.serotonin.bacnet4j.type.primitive.encoding.StandardCharacterEncodings.IBM_MS_DBCS;
+import static com.serotonin.bacnet4j.type.primitive.encoding.StandardCharacterEncodings.NO_CODE_PAGE;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.ServiceLoader;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.serotonin.bacnet4j.exception.BACnetErrorException;
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.type.enumerated.ErrorClass;
 import com.serotonin.bacnet4j.type.enumerated.ErrorCode;
+import com.serotonin.bacnet4j.type.primitive.encoding.CharacterEncoder;
+import com.serotonin.bacnet4j.type.primitive.encoding.CharacterEncoding;
 import com.serotonin.bacnet4j.util.sero.ByteQueue;
 
 public class CharacterString extends Primitive {
+
     public static final byte TYPE_ID = 7;
-    public static final int IBM_MS_DBCS_CODEPAGE = 850;
-    
-    public interface Encodings {
-        byte ANSI_X3_4 = 0;
-        byte IBM_MS_DBCS = 1;
-        byte JIS_C_6226 = 2;
-        byte ISO_10646_UCS_4 = 3;
-        byte ISO_10646_UCS_2 = 4;
-        byte ISO_8859_1 = 5;
-    }
+
+    // load encoders before creating EMPTY
+    private static final List<CharacterEncoder> characterEncoders = loadEncoders();
 
     public static final CharacterString EMPTY = new CharacterString("");
 
-    private final byte encoding;
+    private final CharacterEncoding encoding;
+    private final CharacterEncoder encoder;
     private final String value;
 
     public CharacterString(final String value) {
-        encoding = Encodings.ANSI_X3_4;
-        this.value = value == null ? "" : value;
+        this(new CharacterEncoding(ANSI_X3_4), value);
     }
 
     /**
      * According to Oracle java documentation about Charset, the behavior of optional charsets may vary between java platform implementations.
      * This concerns ISO_10646_UCS_4 (UTF-32), IBM_MS_DBCS and JIS_C_6226.
      * @param encoding
-     * @param value 
+     * @param value
      */
     public CharacterString(final byte encoding, final String value) {
+        this(new CharacterEncoding(encoding, defaultCodingPage(encoding)), value);
+    }
+
+    public CharacterString(final CharacterEncoding encoding, final String value) {
+        this.encoding = encoding;
         try {
-            validateEncoding();
+            encoder = findEncoder(encoding);
         } catch (final BACnetErrorException e) {
             // This is an API constructor, so it doesn't need to throw checked exceptions. Convert to runtime.
             throw new BACnetRuntimeException(e);
         }
-        this.encoding = encoding;
         this.value = value == null ? "" : value;
-    }
-
-    public byte getEncoding() {
-        return encoding;
-    }
-
-    public String getValue() {
-        return value;
     }
 
     //
@@ -90,123 +91,100 @@ public class CharacterString extends Primitive {
     public CharacterString(final ByteQueue queue) throws BACnetErrorException {
         final int length = (int) readTag(queue, TYPE_ID);
 
-        encoding = queue.pop();
-        validateEncoding();
-        int headerLength = 1;
-        if (encoding == Encodings.IBM_MS_DBCS) {
-            headerLength += 2;
-            //Decode the codePage
-            int codePage = queue.popU2B();
-            //Currently only the codepage 850 is supported for IBM_MS_DBCS.
-            if (codePage != IBM_MS_DBCS_CODEPAGE) {
-                throw new BACnetErrorException(ErrorClass.property, ErrorCode.characterSetNotSupported, Byte.toString(encoding));
-            }
-        }
+        encoding = createCharacterEncoding(queue);
+        encoder = findEncoder(encoding);
+
+        int headerLength = calcHeaderLength();
 
         final byte[] bytes = new byte[length - headerLength];
         queue.pop(bytes);
 
-        value = decode(encoding, bytes);
+        value = encoder.decode(bytes);
+    }
+
+    public CharacterEncoding getEncoding() {
+        return encoding;
+    }
+
+    public String getValue() {
+        return value;
     }
 
     @Override
     public void writeImpl(final ByteQueue queue) {
-        queue.push(encoding);
-        queue.push(encode(encoding, value));
+        queue.push(encoding.getEncoding());
+        queue.push(encoder.encode(value));
     }
 
     @Override
     protected long getLength() {
-        return encode(encoding, value).length + 1;
+        return encoder.encode(value).length + 1;
     }
 
     @Override
     public byte getTypeId() {
         return TYPE_ID;
     }
-    
-    private static byte[] encode(final byte encoding, final String value) {
-        try {
-            switch (encoding) {
-            case Encodings.ANSI_X3_4:
-                return value.getBytes("UTF-8");
-            case Encodings.ISO_10646_UCS_2:
-                return value.getBytes("UTF-16");           
-            case Encodings.ISO_8859_1:
-                return value.getBytes("ISO-8859-1");
-            case Encodings.ISO_10646_UCS_4:
-                return value.getBytes("UTF-32");   
-            case Encodings.IBM_MS_DBCS:    
-               byte[] bytes = value.getBytes("IBM" + IBM_MS_DBCS_CODEPAGE);
-               //Add the codePage
-               byte[] result = new byte[2 + bytes.length];
-               result[0] = (byte) (IBM_MS_DBCS_CODEPAGE >> 8);
-               result[1] = (byte) IBM_MS_DBCS_CODEPAGE;
-               System.arraycopy(bytes, 0, result, 2, bytes.length);
-               return result;
-            default:
-                return null;
-            }
-        } catch (final UnsupportedEncodingException e) {
-            // Should never happen, so convert to a runtime exception.
-            throw new RuntimeException(e);
+
+    private int calcHeaderLength() {
+        int headerLength = 1;
+        if (encoding.getCodePage() != NO_CODE_PAGE) {
+            headerLength += 2;
         }
+        return headerLength;
     }
 
-    private static String decode(final byte encoding, final byte[] bytes) {
-        try {
-            switch (encoding) {
-                case Encodings.ANSI_X3_4:
-                    return new String(bytes, "UTF-8");
-                case Encodings.ISO_10646_UCS_2:                               
-                    return new String(bytes, "UTF-16");
-                case Encodings.ISO_8859_1:
-                    return new String(bytes, "ISO-8859-1");
-                 case Encodings.ISO_10646_UCS_4:    
-                    return new String(bytes, "UTF-32");
-                case Encodings.IBM_MS_DBCS:
-                    return new String(bytes, "IBM" + IBM_MS_DBCS_CODEPAGE);
-                default:
-                    return "";
-            }
-        } catch (final UnsupportedEncodingException e) {
-            // Should never happen, so convert to a runtime exception.
-            throw new RuntimeException(e);
+    private CharacterEncoding createCharacterEncoding(ByteQueue queue) {
+        byte encodingValue = queue.pop();
+        if (encodingValue != IBM_MS_DBCS) {
+            return new CharacterEncoding(encodingValue, NO_CODE_PAGE);
         }
+        //Decode the codePage
+        int codePage = queue.popU2B();
+        return new CharacterEncoding(encodingValue, codePage);
     }
 
-    private void validateEncoding() throws BACnetErrorException {
-        if (encoding != Encodings.ANSI_X3_4 && encoding != Encodings.ISO_10646_UCS_2
-                && encoding != Encodings.ISO_8859_1 && encoding != Encodings.ISO_10646_UCS_4 && encoding != Encodings.IBM_MS_DBCS)
-            throw new BACnetErrorException(ErrorClass.property, ErrorCode.characterSetNotSupported,
-                    Byte.toString(encoding));
+    private static CharacterEncoder findEncoder(CharacterEncoding encoding) throws BACnetErrorException {
+        return characterEncoders.stream()
+                .filter(encoder -> encoder.isEncodingSupported(encoding))
+                .findFirst()
+                .orElseThrow(() -> new BACnetErrorException(
+                        ErrorClass.property,
+                        ErrorCode.characterSetNotSupported,
+                        encoding.toString())
+                );
+    }
+
+    private static int defaultCodingPage(byte encoding) {
+        if (encoding == IBM_MS_DBCS) {
+            return CODE_PAGE_LATIN_1;
+        }
+        return NO_CODE_PAGE;
+    }
+
+    private static List<CharacterEncoder> loadEncoders() {
+        ServiceLoader<CharacterEncoder> loader = ServiceLoader.load(CharacterEncoder.class);
+        return StreamSupport.stream(loader.spliterator(), false)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CharacterString that = (CharacterString) o;
+        return Objects.equals(encoding, that.encoding) &&
+                Objects.equals(encoder, that.encoder) &&
+                Objects.equals(value, that.value);
     }
 
     @Override
     public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + (value == null ? 0 : value.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final CharacterString other = (CharacterString) obj;
-        if (encoding != other.encoding)
-            return false;
-        if (value == null) {
-            if (other.value != null)
-                return false;
-        } else if (!value.equals(other.value))
-            return false;
-        return true;
+        return Objects.hash(encoding, encoder, value);
     }
 
     @Override
